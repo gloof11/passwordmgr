@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="{{url_for('static', filename='app.js')}}"></script>
+        <script type="text/javascript" src="https://cdn.rawgit.com/ricmoo/aes-js/e27b99df/index.js"></script>
+    </head>
+    <body>
+        <h2>Register</h2>
+        <form method=POST name="Register" action="/register">
+            Username: <input type=text name="username">
+            Password: <input type=text name="password">
+            <input type="submit" value="Submit">
+        </form>
+        <br>
+        <h2>Get Vault</h2>
+        <form method=POST name="Get Vault" action="/getvault">
+            Username: <input type=text name="username">
+            Password: <input type=text name="password">
+            <input type="submit" value="Submit">
+        </form>
+        <br>
+        <h2>Update Vault</h2>
+        <form method=POST name="Update Vault" action="/importvault" enctype="multipart/form-data">
+            Username: <input type=text name="username">
+            Password: <input type=text name="password">
+            <input type=file id="vault" name="vault">
+            <input type="submit" value="Submit">
+        </form>
+    </body>
+</html>

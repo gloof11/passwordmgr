@@ -4,8 +4,8 @@
 Backend
 ================
 - Store the users credentials (Done!)
-- Store the users vault
-- Encrypt the users vault (Python)
+- Store the users vault (Done!)
+- Encrypt the users vault (Done!)
 
 ================
 Frontend

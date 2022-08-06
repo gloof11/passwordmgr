@@ -1,4 +1,4 @@
-from flask import Flask, url_for, request
+from flask import Flask, url_for, request, render_template
 import hashlib
 from Crypto.Cipher import AES
 
@@ -55,8 +55,8 @@ def RetVault(user):
     return(decrypted_vault.decode("utf-8"))
 
 @app.route("/")
-def hello():
-    return "Hello there!"
+def home():
+    return render_template('index.html')
 
 @app.route("/register",methods=['POST'])
 def register():
@@ -97,3 +97,6 @@ def getvault():
         return ("Here is your vault: \n"+RetVault(username))
     else:
         return "Incorrect Creds"
+
+if __name__== '__main__':
+    app.run()
