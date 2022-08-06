@@ -5,7 +5,54 @@ from Crypto.Cipher import AES
 # Create our flask project
 app = Flask(__name__)
 
-ServerKey = 'This is a key123'.encode('utf-8')
+# App key and IV
+SecretKey = b"A"*16
+IV = b"B"*16
+
+def CreateUser(username, password):
+    fullcreds = str(username) + "," + hashlib.md5(str(password).encode("ascii")).hexdigest()
+
+    with open("accounts", 'a') as file:
+        file.write(fullcreds + "\n")
+        file.close()
+
+def AuthUser(username, password):
+    password = hashlib.md5(str(password).encode("ascii")).hexdigest()
+    fullcred = username+password
+    with open("accounts", 'r') as file:
+        for user in file.readlines():
+            if (fullcred) == user.replace(",", "").strip("\n"):
+                return True
+        file.close()
+
+def StoreVault(user, data):
+    # Create the AES object
+    obj = AES.new(SecretKey, AES.MODE_CFB, IV=IV)
+    
+    # Convert the data to bytes
+    plain_vault = bytes(data)
+
+    # Encrypt the vault
+    encrypted_vault = obj.encrypt(plain_vault)
+
+    # Store the vault
+    file = open("vaults/"+user+".vault", "wb")
+    file.write(encrypted_vault)
+    file.close()
+
+def RetVault(user):
+    # Create the AES object
+    obj = AES.new(SecretKey, AES.MODE_CFB, IV=IV)
+    
+    # Retrieve the user's vault
+    file = open("vaults/"+user+".vault", "rb")
+
+    # Decrypt the vault
+    decrypted_vault = obj.decrypt(file.read())
+    file.close()
+
+    # Send the vault back
+    return(decrypted_vault.decode("utf-8"))
 
 @app.route("/")
 def hello():
@@ -13,36 +60,40 @@ def hello():
 
 @app.route("/register",methods=['POST'])
 def register():
+    # Assign user and pass vars
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
 
-        fullcreds = str(username) + "," + hashlib.md5(str(password).encode("ascii")).hexdigest()
+    # Create the user
+    CreateUser(username, password)
 
-    with open("accounts", 'a') as file:
-        file.write(fullcreds + "\n")
-        file.close()
-    
-    return fullcreds
+    return "User created!"
 
-@app.route("/importvault/<username>/<password>",methods=['POST'])
-def importvault(username, password):
-    password = hashlib.md5(str(password).encode("ascii")).hexdigest()
-    fullcred = username+password
+@app.route("/importvault",methods=['POST'])
+def importvault():
+    # Assign user and pass vars
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        vault = request.files['vault']
 
-    with open("accounts", 'r') as file:
-        for user in file.readlines():
-            if (fullcred) == user.replace(",", "").strip("\n"):
-                if request.method == 'POST':
-                    f = request.files['file']
-                    f.save(fullcred)
+    # Authenticate the user
+    if AuthUser(username, password):
+        StoreVault(username, vault.read())
+        return "Vault has been uploaded!"
+    else:
+        return "Incorrect Creds"
 
-                with open(fullcred, "r") as vault:
-                    vault.readlines()
-                    vault.close()
+@app.route("/getvault",methods=['POST'])
+def getvault():
+    # Assign user and pass vars
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
 
-                return "Your vault has been uploaded"
-            else:
-                return "Bad"
-
-        file.close()
+    # Authenticate the user
+    if AuthUser(username, password):
+        return ("Here is your vault: \n"+RetVault(username))
+    else:
+        return "Incorrect Creds"
